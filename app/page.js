@@ -43,7 +43,7 @@ export default function Home() {
       <section className="max-w-7xl mx-auto px-6 pt-20 pb-32">
         <div className="flex flex-col lg:flex-row items-center gap-12">
           <div className="flex-1 space-y-6">
-            <span className="inline-block px-4 py-1.5 bg-blue-100 text-blue-700 text-sm font-medium rounded-full">🧠 Powered by AI & Deep Learning</span>
+            <span className="inline-block px-4 py-1.5 bg-blue-100 text-blue-700 text-sm font-medium rounded-full"> AI & Deep Learning</span>
 
             <h1 className="text-5xl lg:text-6xl font-bold tracking-tight text-gray-900">
               AI-Powered <span className="text-blue-500">Medical Image</span> Analysis
