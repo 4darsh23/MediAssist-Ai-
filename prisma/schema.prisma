@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===== USER =====
+model User {
+  id            String    @id @default(cuid())
+  clerkId       String    @unique
+  email         String    @unique
+  firstName     String?
+  lastName      String?
+  imageUrl      String?
+  role          String    @default("patient")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  vitals        Vital[]
+  scans         Scan[]
+  reports       Report[]
+
+  @@index([clerkId])
+}
+
+// ===== VITALS =====
+model Vital {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type          String    // heart-rate, blood-pressure, blood-sugar, etc
+  value         Float
+  secondary     Float?    // for blood pressure diastolic
+  unit          String    // bpm, mmHg, mg/dL, etc
+  notes         String?
+  status        String    @default("normal")  // normal, warning, danger
+
+  recordedAt    DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+
+  @@index([userId])
+  @@index([type])
+  @@index([recordedAt])
+}
+
+// ===== SCANS =====
+model Scan {
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  scanType        String    // skin-lesion, chest-xray, eye-disease
+  imageUrl        String
+  originalFileName String?
+
+  predictedLabel  String?
+  confidence      Float?
+  severity        String?   // normal, low, moderate, high, critical
+  classProbabilities Json?
+  recommendations String[]
+
+  status          String    @default("pending") // pending, completed, failed
+  notes           String?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  report          Report?
+
+  @@index([userId])
+  @@index([scanType])
+  @@index([createdAt])
+}
+
+// ===== REPORTS =====
+model Report {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title         String
+  type          String    // scan, vitals, outbreak
+  summary       String?
+  content       Json?     // flexible report content
+
+  scanId        String?   @unique
+  scan          Scan?     @relation(fields: [scanId], references: [id])
+
+  severity      String?
+  status        String    @default("completed")
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+}
