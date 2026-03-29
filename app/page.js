@@ -1,4 +1,5 @@
 import { Activity, Brain, Shield, Upload, ArrowRight, Heart, Eye, Scan } from "lucide-react";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -34,8 +35,8 @@ export default function Home() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition">Sign In</button>
-          <button className="px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">Get Started</button>
+          <Link href="/sign-in" className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition">Sign In</Link>
+          <Link href="/sign-up" className="px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">Get Started</Link>
         </div>
       </nav>
 
@@ -52,11 +53,11 @@ export default function Home() {
             <p className="text-lg text-gray-500 max-w-xl">Detect diseases early with powerful CNN models. Upload medical images, track your vitals, and get instant AI-powered analysis to help doctors make better decisions.</p>
 
             <div className="flex items-center gap-4 pt-4">
-              <button className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition flex items-center gap-2 font-medium">
+              <Link href="/scan" className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition flex items-center gap-2 font-medium">
                 Start Free Analysis
                 <ArrowRight className="w-4 h-4" />
-              </button>
-              <button className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium">Learn More</button>
+              </Link>
+              <a href="#features" className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium">Learn More</a>
             </div>
 
             <div className="flex items-center gap-8 pt-6">
@@ -110,6 +111,7 @@ export default function Home() {
               desc: "Detect melanoma, carcinoma and other skin conditions from dermoscopy images.",
               color: "text-pink-500",
               bg: "bg-pink-500/10",
+              href: "/scan?type=skin-lesion",
             },
             {
               icon: Activity,
@@ -117,6 +119,7 @@ export default function Home() {
               desc: "Pneumonia detection from chest radiographs with high accuracy CNN models.",
               color: "text-blue-500",
               bg: "bg-blue-500/10",
+              href: "/scan?type=chest-xray",
             },
             {
               icon: Eye,
@@ -124,6 +127,7 @@ export default function Home() {
               desc: "Screen for diabetic retinopathy, glaucoma and cataracts from fundus images.",
               color: "text-emerald-500",
               bg: "bg-emerald-500/10",
+              href: "/scan?type=eye-disease",
             },
             {
               icon: Heart,
@@ -131,6 +135,7 @@ export default function Home() {
               desc: "Manually log blood pressure, heart rate, sugar levels and more. Track trends over time.",
               color: "text-red-500",
               bg: "bg-red-500/10",
+              href: "/vitals",
             },
             {
               icon: Shield,
@@ -138,6 +143,7 @@ export default function Home() {
               desc: "Doctors can manage patients, review AI results and add clinical notes.",
               color: "text-purple-500",
               bg: "bg-purple-500/10",
+              href: "/patients",
             },
             {
               icon: Upload,
@@ -145,10 +151,12 @@ export default function Home() {
               desc: "Generate downloadable PDF reports with AI analysis and recommendations.",
               color: "text-orange-500",
               bg: "bg-orange-500/10",
+              href: "/reports",
             },
           ].map((feature, i) => (
-            <div
+            <Link
               key={i}
+              href={feature.href}
               className="group p-6 rounded-2xl border border-gray-200 bg-white hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer"
             >
               <div className={`w-12 h-12 rounded-xl ${feature.bg} flex items-center justify-center mb-4`}>
@@ -156,7 +164,10 @@ export default function Home() {
               </div>
               <h3 className="font-semibold text-lg mb-2 text-gray-900">{feature.title}</h3>
               <p className="text-sm text-gray-500">{feature.desc}</p>
-            </div>
+              <div className="flex items-center gap-1 mt-3 text-sm font-medium text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                Get Started <ArrowRight className="w-4 h-4" />
+              </div>
+            </Link>
           ))}
         </div>
       </section>
@@ -206,10 +217,10 @@ export default function Home() {
         <div className="rounded-3xl bg-gradient-to-r from-blue-600 to-indigo-600 p-12 text-center text-white">
           <h2 className="text-3xl font-bold mb-4">Ready to Detect Diseases Early?</h2>
           <p className="text-blue-100 mb-8 max-w-xl mx-auto">Join hundreds of doctors and patients using AI-powered analysis for better health outcomes.</p>
-          <button className="px-6 py-3 bg-white text-blue-600 rounded-lg hover:bg-blue-50 transition font-medium inline-flex items-center gap-2">
+          <Link href="/sign-up" className="px-6 py-3 bg-white text-blue-600 rounded-lg hover:bg-blue-50 transition font-medium inline-flex items-center gap-2">
             Get Started Free
             <ArrowRight className="w-4 h-4" />
-          </button>
+          </Link>
         </div>
       </section>
 

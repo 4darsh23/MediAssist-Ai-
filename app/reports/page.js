@@ -8,7 +8,7 @@ const demoReports = [
     id: "RPT-2025-001",
     title: "Skin Lesion Analysis Report",
     type: "scan",
-    patient: "John Doe",
+    patient: "Adarsh Das",
     date: "2025-05-15",
     result: "Benign Keratosis",
     confidence: 92,
