@@ -80,12 +80,41 @@ export default function Home() {
 
           {/* Hero Visual */}
           <div className="flex-1 relative">
-            <div className="w-full max-w-md mx-auto aspect-square rounded-3xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border border-blue-200/50 flex items-center justify-center">
-              <div className="text-center space-y-4">
-                <div className="w-20 h-20 rounded-2xl bg-blue-500/20 flex items-center justify-center mx-auto animate-pulse">
-                  <Brain className="w-10 h-10 text-blue-500" />
+            {/* Glow effect behind image */}
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-400/20 via-indigo-400/15 to-purple-400/10 rounded-3xl blur-3xl scale-110" />
+
+            {/* Main hero image */}
+            <div className="relative w-full max-w-lg mx-auto">
+              <img
+                src="/images/hero-medical-ai.png"
+                alt="AI-powered medical image analysis dashboard showing disease detection"
+                className="w-full rounded-2xl shadow-2xl shadow-blue-500/20 border border-white/20"
+              />
+
+              {/* Floating accent card - top right */}
+              <div className="absolute -top-4 -right-4 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg px-4 py-3 border border-gray-100 animate-bounce" style={{ animationDuration: '3s' }}>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                    <Shield className="w-4 h-4 text-emerald-500" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-900">95% Accuracy</p>
+                    <p className="text-[10px] text-gray-400">CNN Model</p>
+                  </div>
                 </div>
-                <p className="text-sm text-gray-500">AI Disease Detection</p>
+              </div>
+
+              {/* Floating accent card - bottom left */}
+              <div className="absolute -bottom-4 -left-4 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg px-4 py-3 border border-gray-100 animate-bounce" style={{ animationDuration: '4s', animationDelay: '1s' }}>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                    <Brain className="w-4 h-4 text-blue-500" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-900">EfficientNet-B0</p>
+                    <p className="text-[10px] text-gray-400">Deep Learning</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
