@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Scan, Upload, X, AlertTriangle, CheckCircle, RotateCcw, FileText, Brain, Image as ImageIcon, Loader2, Cpu, Layers, Clock, Zap } from "lucide-react";
 
@@ -45,6 +45,21 @@ function getSeverityBadge(severity) {
 }
 
 export default function ScanPage() {
+  return (
+    <Suspense fallback={
+      <div className="p-6 lg:p-8 max-w-5xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">AI Scan</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Loading...</p>
+        </div>
+      </div>
+    }>
+      <ScanPageContent />
+    </Suspense>
+  );
+}
+
+function ScanPageContent() {
   const searchParams = useSearchParams();
   const [selectedType, setSelectedType] = useState(null);
   const [imageFile, setImageFile] = useState(null);
@@ -339,6 +354,25 @@ export default function ScanPage() {
         ],
         recommendations: getRecommendations(severity),
       });
+
+      // Save result to PostgreSQL database
+      try {
+        const saveFormData = new FormData();
+        saveFormData.append("image", imageFile);
+        saveFormData.append("scanType", selectedType);
+        saveFormData.append("predictedLabel", topPrediction.label);
+        saveFormData.append("confidence", topPrediction.confidence);
+        saveFormData.append("severity", severity);
+        saveFormData.append("recommendations", JSON.stringify(getRecommendations(severity)));
+        saveFormData.append("notes", "Scanned via AI Scan page");
+
+        await fetch("/api/scans", {
+          method: "POST",
+          body: saveFormData,
+        });
+      } catch (saveError) {
+        console.error("Failed to save scan to database:", saveError);
+      }
     } catch (error) {
       console.error("Analysis failed:", error);
       alert("Analysis failed: " + error.message);
@@ -361,8 +395,8 @@ export default function ScanPage() {
     <div className="p-6 lg:p-8 max-w-5xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">AI Scan</h1>
-        <p className="text-gray-500 mt-1">CNN-powered medical image classification using TensorFlow.js</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">AI Scan</h1>
+        <p className="text-gray-500 dark:text-gray-400 mt-1">CNN-powered medical image classification using TensorFlow.js</p>
       </div>
 
       {result ? (
@@ -371,19 +405,19 @@ export default function ScanPage() {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/15 flex items-center justify-center">
                 <Brain className="w-5 h-5 text-blue-500" />
               </div>
               <div>
-                <h2 className="font-semibold text-gray-900">CNN Analysis Results</h2>
-                <p className="text-sm text-gray-500">
+                <h2 className="font-semibold text-gray-900 dark:text-white">CNN Analysis Results</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   {scanTypes.find((t) => t.id === selectedType)?.name} • {result.modelInfo.name}
                 </p>
               </div>
             </div>
             <button
               onClick={handleReset}
-              className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl hover:bg-gray-50 transition text-sm font-medium text-gray-700"
+              className="flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition text-sm font-medium text-gray-700 dark:text-gray-300"
             >
               <RotateCcw className="w-4 h-4" />
               New Scan
@@ -393,25 +427,25 @@ export default function ScanPage() {
           {/* Image + Prediction */}
           <div className="grid lg:grid-cols-2 gap-6">
             {/* Image */}
-            <div className="bg-white rounded-2xl border border-gray-200 p-4">
-              <p className="text-sm font-medium text-gray-700 mb-3">Input Image</p>
-              <div className="rounded-xl overflow-hidden bg-gray-100">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4">
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Input Image</p>
+              <div className="rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-900">
                 <img
                   src={imagePreview}
                   alt="Scan"
                   className="w-full h-64 object-contain"
                 />
               </div>
-              <p className="text-xs text-gray-400 mt-2">
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
                 {imageFile?.name} • {(imageFile?.size / 1024 / 1024).toFixed(2)} MB
               </p>
             </div>
 
             {/* Prediction */}
-            <div className="bg-white rounded-2xl border border-gray-200 p-6">
-              <p className="text-sm font-medium text-gray-700 mb-4">Classification Output</p>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">Classification Output</p>
 
-              <p className="text-2xl font-bold text-gray-900 mb-2">{result.predictedLabel}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{result.predictedLabel}</p>
 
               {(() => {
                 const badge = getSeverityBadge(result.severity);
@@ -427,10 +461,10 @@ export default function ScanPage() {
               {/* Confidence */}
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-500">Confidence Score</span>
-                  <span className="text-sm font-bold text-gray-900">{result.confidence}%</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Confidence Score</span>
+                  <span className="text-sm font-bold text-gray-900 dark:text-white">{result.confidence}%</span>
                 </div>
-                <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
+                <div className="w-full h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all duration-1000 ${result.confidence > 70 ? "bg-blue-500" : result.confidence > 40 ? "bg-yellow-500" : "bg-gray-400"}`}
                     style={{ width: `${result.confidence}%` }}
@@ -440,22 +474,22 @@ export default function ScanPage() {
 
               {/* Top 5 Predictions */}
               <div>
-                <p className="text-sm font-medium text-gray-700 mb-3">Top 5 Predictions (Softmax Output)</p>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Top 5 Predictions (Softmax Output)</p>
                 <div className="space-y-2">
                   {result.allPredictions.map((pred, i) => (
                     <div
                       key={i}
                       className="flex items-center gap-3"
                     >
-                      <span className="text-xs text-gray-500 w-5">{i + 1}.</span>
-                      <span className="text-xs text-gray-600 w-36 truncate">{pred.label}</span>
-                      <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <span className="text-xs text-gray-500 dark:text-gray-400 w-5">{i + 1}.</span>
+                      <span className="text-xs text-gray-600 dark:text-gray-300 w-36 truncate">{pred.label}</span>
+                      <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full ${i === 0 ? "bg-blue-500" : "bg-blue-200"}`}
                           style={{ width: `${pred.confidence}%` }}
                         />
                       </div>
-                      <span className="text-xs font-medium text-gray-500 w-10 text-right">{pred.confidence}%</span>
+                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 w-10 text-right">{pred.confidence}%</span>
                     </div>
                   ))}
                 </div>
@@ -464,8 +498,8 @@ export default function ScanPage() {
           </div>
 
           {/* Model Architecture — KEY FOR REVIEWERS */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6">
-            <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <Cpu className="w-5 h-5 text-blue-500" />
               Model Architecture & Details
             </h3>
@@ -473,15 +507,15 @@ export default function ScanPage() {
               {Object.entries(result.modelInfo).map(([key, value]) => (
                 <div
                   key={key}
-                  className="p-3 bg-gray-50 rounded-xl"
+                  className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl"
                 >
-                  <p className="text-xs text-gray-400 capitalize">{key.replace(/([A-Z])/g, " $1").trim()}</p>
-                  <p className="text-sm font-semibold text-gray-900 mt-0.5">{value}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 capitalize">{key.replace(/([A-Z])/g, " $1").trim()}</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white mt-0.5">{value}</p>
                 </div>
               ))}
-              <div className="p-3 bg-blue-50 rounded-xl">
-                <p className="text-xs text-blue-400">Inference Time</p>
-                <p className="text-sm font-semibold text-blue-700 mt-0.5 flex items-center gap-1">
+              <div className="p-3 bg-blue-50 dark:bg-blue-500/15 rounded-xl">
+                <p className="text-xs text-blue-400 dark:text-blue-300">Inference Time</p>
+                <p className="text-sm font-semibold text-blue-700 dark:text-blue-300 mt-0.5 flex items-center gap-1">
                   <Clock className="w-3.5 h-3.5" />
                   {result.inferenceTime} ms
                 </p>
@@ -490,8 +524,8 @@ export default function ScanPage() {
           </div>
 
           {/* Preprocessing Pipeline — KEY FOR REVIEWERS */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6">
-            <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <Layers className="w-5 h-5 text-purple-500" />
               Image Preprocessing Pipeline
             </h3>
@@ -501,7 +535,7 @@ export default function ScanPage() {
                   key={i}
                   className="flex items-center gap-2"
                 >
-                  <div className="flex items-center gap-2 px-3 py-2 bg-purple-50 rounded-lg">
+                  <div className="flex items-center gap-2 px-3 py-2 bg-purple-50 dark:bg-purple-500/15 rounded-lg">
                     <span className="w-5 h-5 rounded-full bg-purple-500 text-white text-xs flex items-center justify-center font-bold">{item.step}</span>
                     <div>
                       <p className="text-xs font-semibold text-purple-700">{item.label}</p>
@@ -515,8 +549,8 @@ export default function ScanPage() {
           </div>
 
           {/* CNN Architecture Visualization */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6">
-            <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <Zap className="w-5 h-5 text-amber-500" />
               CNN Layer Architecture
             </h3>
@@ -536,29 +570,29 @@ export default function ScanPage() {
                   key={i}
                   className="flex flex-col items-center gap-1 group cursor-pointer"
                 >
-                  <div className="hidden group-hover:block text-xs text-gray-500 whitespace-nowrap">{layer.detail}</div>
+                  <div className="hidden group-hover:block text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">{layer.detail}</div>
                   <div
                     className={`w-10 rounded-t-md ${layer.color} transition-all group-hover:opacity-80`}
                     style={{ height: `${layer.h}px` }}
                   />
-                  <span className="text-xs text-gray-500 whitespace-nowrap">{layer.name}</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">{layer.name}</span>
                 </div>
               ))}
             </div>
-            <p className="text-xs text-gray-400 mt-3">Hover over layers to see tensor dimensions at each stage</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-3">Hover over layers to see tensor dimensions at each stage</p>
           </div>
 
           {/* Recommendations */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6">
-            <h3 className="font-semibold text-gray-900 mb-4">Recommendations</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Recommendations</h3>
             <div className="space-y-2">
               {result.recommendations.map((rec, i) => (
                 <div
                   key={i}
-                  className="flex items-start gap-2 p-3 rounded-xl bg-gray-50"
+                  className="flex items-start gap-2 p-3 rounded-xl bg-gray-50 dark:bg-gray-700/50"
                 >
                   {i === result.recommendations.length - 1 ? <AlertTriangle className="w-4 h-4 text-yellow-500 mt-0.5 flex-shrink-0" /> : <CheckCircle className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />}
-                  <p className="text-sm text-gray-700">{rec}</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300">{rec}</p>
                 </div>
               ))}
             </div>
@@ -572,7 +606,7 @@ export default function ScanPage() {
             </button>
             <button
               onClick={handleReset}
-              className="flex items-center gap-2 px-5 py-2.5 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition text-sm font-medium"
+              className="flex items-center gap-2 px-5 py-2.5 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition text-sm font-medium"
             >
               <RotateCcw className="w-4 h-4" />
               New Scan
@@ -583,9 +617,9 @@ export default function ScanPage() {
         // ===== UPLOAD VIEW =====
         <div className="space-y-6">
           {/* Step 1 */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6">
-            <h2 className="font-semibold text-gray-900 mb-1">Step 1: Select Scan Type</h2>
-            <p className="text-sm text-gray-500 mb-4">Choose the type of medical image to analyze</p>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+            <h2 className="font-semibold text-gray-900 dark:text-white mb-1">Step 1: Select Scan Type</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Choose the type of medical image to analyze</p>
             <div className="grid sm:grid-cols-3 gap-4">
               {scanTypes.map((type) => (
                 <button
@@ -594,8 +628,8 @@ export default function ScanPage() {
                   className={`p-4 rounded-xl border-2 text-left transition-all ${selectedType === type.id ? type.activeColor : `${type.color} hover:shadow-md`}`}
                 >
                   <span className="text-3xl">{type.icon}</span>
-                  <h3 className="font-semibold text-gray-900 mt-2">{type.name}</h3>
-                  <p className="text-xs text-gray-500 mt-1">{type.description}</p>
+                  <h3 className="font-semibold text-gray-900 dark:text-white mt-2">{type.name}</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{type.description}</p>
                   {selectedType === type.id && (
                     <div className="flex items-center gap-1 mt-2">
                       <CheckCircle className="w-4 h-4 text-emerald-500" />
@@ -608,9 +642,9 @@ export default function ScanPage() {
           </div>
 
           {/* Step 2 */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6">
-            <h2 className="font-semibold text-gray-900 mb-1">Step 2: Upload Image</h2>
-            <p className="text-sm text-gray-500 mb-4">Image will be preprocessed to 224×224 RGB tensor for CNN input</p>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+            <h2 className="font-semibold text-gray-900 dark:text-white mb-1">Step 2: Upload Image</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Image will be preprocessed to 224×224 RGB tensor for CNN input</p>
 
             {!imagePreview ? (
               <div
@@ -621,7 +655,7 @@ export default function ScanPage() {
                 }}
                 onDragLeave={() => setDragOver(false)}
                 onClick={() => fileInputRef.current?.click()}
-                className={`border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all ${dragOver ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:border-blue-400 hover:bg-gray-50"}`}
+                className={`border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all ${dragOver ? "border-blue-500 bg-blue-50 dark:bg-blue-500/10" : "border-gray-300 dark:border-gray-600 hover:border-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700/50"}`}
               >
                 <input
                   ref={fileInputRef}
@@ -631,12 +665,12 @@ export default function ScanPage() {
                   onChange={(e) => handleFileSelect(e.target.files[0])}
                 />
                 <Upload className={`w-10 h-10 mx-auto mb-3 ${dragOver ? "text-blue-500" : "text-gray-400"}`} />
-                <p className="text-sm font-medium text-gray-700">Drag & drop your image here</p>
-                <p className="text-xs text-gray-400 mt-1">JPG, PNG • Max 10MB</p>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Drag & drop your image here</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">JPG, PNG • Max 10MB</p>
               </div>
             ) : (
               <div>
-                <div className="rounded-xl overflow-hidden bg-gray-100 border border-gray-200">
+                <div className="rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
                   <img
                     ref={imageRef}
                     src={imagePreview}
@@ -648,15 +682,15 @@ export default function ScanPage() {
                 <div className="flex items-center justify-between mt-3">
                   <div className="flex items-center gap-2">
                     <ImageIcon className="w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">{imageFile?.name}</span>
-                    <span className="text-xs text-gray-400">({(imageFile?.size / 1024 / 1024).toFixed(2)} MB)</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-300">{imageFile?.name}</span>
+                    <span className="text-xs text-gray-400 dark:text-gray-500">({(imageFile?.size / 1024 / 1024).toFixed(2)} MB)</span>
                   </div>
                   <button
                     onClick={() => {
                       setImageFile(null);
                       setImagePreview(null);
                     }}
-                    className="p-1.5 rounded-lg hover:bg-gray-100 transition"
+                    className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
                   >
                     <X className="w-4 h-4 text-gray-500" />
                   </button>
@@ -685,13 +719,13 @@ export default function ScanPage() {
           </button>
 
           {/* ML Info Box */}
-          <div className="bg-blue-50 rounded-xl p-4">
-            <h3 className="text-sm font-semibold text-blue-900 mb-3 flex items-center gap-2">
+          <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-4">
+            <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-3 flex items-center gap-2">
               <Brain className="w-4 h-4" />
               How the CNN Model Works
             </h3>
             <div className="grid sm:grid-cols-3 gap-4">
-              <div className="text-xs text-blue-700 space-y-1">
+              <div className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
                 <p className="font-semibold">Model Architecture</p>
                 <p>• EfficientNet-B0 (CNN)</p>
                 <p>• MBConv blocks + custom head</p>
@@ -715,8 +749,8 @@ export default function ScanPage() {
             </div>
           </div>
 
-          {!selectedType && <p className="text-center text-sm text-gray-400">Select a scan type to get started</p>}
-          {selectedType && !imageFile && <p className="text-center text-sm text-gray-400">Upload an image to continue</p>}
+          {!selectedType && <p className="text-center text-sm text-gray-400 dark:text-gray-500">Select a scan type to get started</p>}
+          {selectedType && !imageFile && <p className="text-center text-sm text-gray-400 dark:text-gray-500">Upload an image to continue</p>}
         </div>
       )}
     </div>

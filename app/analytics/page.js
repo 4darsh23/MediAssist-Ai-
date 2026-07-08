@@ -249,18 +249,18 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-transparent p-6">
       <div className="max-w-7xl mx-auto">
         {/* Page Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800">Epidemiological Analytics</h1>
-            <p className="text-gray-500 mt-1">Real-time disease surveillance and outbreak monitoring</p>
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Epidemiological Analytics</h1>
+            <p className="text-gray-500 dark:text-gray-400 mt-1">Real-time disease surveillance and outbreak monitoring</p>
           </div>
           <div className="flex gap-3 mt-4 md:mt-0">
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
             >
               <Filter className="w-4 h-4" />
               Filters
@@ -268,7 +268,7 @@ export default function AnalyticsPage() {
             </button>
             <button
               onClick={handleExportCSV}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
             >
               <Download className="w-4 h-4" />
               Export
@@ -366,11 +366,11 @@ export default function AnalyticsPage() {
 
         {/* Section 1: Overview Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
-          <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500">Today</p>
-                <p className="text-2xl font-bold text-gray-800">{overviewStats.totalToday}</p>
+                <p className="text-2xl font-bold text-gray-800 dark:text-white">{overviewStats.totalToday}</p>
               </div>
               <div className={`flex items-center gap-1 text-sm ${overviewStats.todayChange >= 0 ? "text-red-500" : "text-green-500"}`}>
                 {overviewStats.todayChange >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
@@ -471,7 +471,7 @@ export default function AnalyticsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           {/* Disease Distribution Pie Chart */}
           <div className="bg-white rounded-xl shadow-sm p-6">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">Disease Distribution</h3>
+            <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Disease Distribution</h3>
             <ResponsiveContainer
               width="100%"
               height={300}
@@ -813,7 +813,7 @@ export default function AnalyticsPage() {
         <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <h3 className="text-lg font-bold text-gray-800">Live Diagnosis Feed</h3>
+              <h3 className="text-lg font-bold text-gray-800 dark:text-white">Live Diagnosis Feed</h3>
               <span className="flex items-center gap-1 text-sm text-green-600">
                 <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                 Live

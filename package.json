@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.37.4",
+    "@prisma/client": "^6.19.3",
     "@tensorflow-models/mobilenet": "^2.1.1",
     "@tensorflow/tfjs": "^4.22.0",
     "class-variance-authority": "^0.7.1",
@@ -20,6 +21,7 @@
     "next-themes": "^0.4.6",
     "onnxruntime-web": "^1.24.3",
     "postcss": "^8.5.6",
+    "prisma": "^6.19.3",
     "radix-ui": "^1.4.3",
     "react": "19.2.3",
     "react-dom": "19.2.3",

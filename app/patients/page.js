@@ -181,10 +181,10 @@ export default function PatientPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-transparent p-6">
       <div className="max-w-7xl mx-auto">
         {/* Section 1: Patient Profile Header */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 mb-6">
           <div className="flex items-center gap-6">
             <img
               src={user?.imageUrl || "/default-avatar.png"}
@@ -192,8 +192,8 @@ export default function PatientPage() {
               className="w-20 h-20 rounded-full object-cover border-4 border-blue-100"
             />
             <div className="flex-1">
-              <h1 className="text-2xl font-bold text-gray-800">{user?.fullName || "Patient"}</h1>
-              <p className="text-gray-500">{user?.primaryEmailAddress?.emailAddress}</p>
+              <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{user?.fullName || "Patient"}</h1>
+              <p className="text-gray-500 dark:text-gray-400">{user?.primaryEmailAddress?.emailAddress}</p>
               <div className="flex gap-4 mt-2 text-sm text-gray-600">
                 <span>Patient ID: {user?.id?.slice(0, 8)}</span>
                 <span>Member since: {new Date(user?.createdAt).toLocaleDateString()}</span>
@@ -205,14 +205,14 @@ export default function PatientPage() {
 
         {/* Section 2: Quick Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
             <div className="flex items-center gap-4">
               <div className="p-3 bg-blue-100 rounded-lg">
                 <FileImage className="w-6 h-6 text-blue-600" />
               </div>
               <div>
                 <p className="text-sm text-gray-500">Total Scans</p>
-                <p className="text-2xl font-bold text-gray-800">{stats.totalScans}</p>
+                <p className="text-2xl font-bold text-gray-800 dark:text-white">{stats.totalScans}</p>
               </div>
             </div>
           </div>
@@ -255,13 +255,13 @@ export default function PatientPage() {
         </div>
 
         {/* Section 3: Upload New Scan */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Upload New Scan</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 mb-6">
+          <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Upload New Scan</h2>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Upload Area */}
             <div
-              className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-blue-500 transition cursor-pointer"
+              className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center hover:border-blue-500 transition cursor-pointer"
               onDragOver={handleDragOver}
               onDrop={handleDrop}
               onClick={() => document.getElementById("imageInput").click()}
@@ -418,9 +418,9 @@ export default function PatientPage() {
         )}
 
         {/* Section 5: Diagnosis History Table */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-800">Diagnosis History</h2>
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white">Diagnosis History</h2>
             <div className="flex gap-4">
               <input
                 type="text"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Heart, Droplets, Thermometer, Wind, Weight, Moon, Pill, Plus, X, TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 const vitalTypes = [
@@ -196,25 +196,84 @@ export default function VitalsPage() {
     textValue: "",
   });
 
+  useEffect(() => {
+    fetchVitals();
+  }, []);
+
+  const fetchVitals = async () => {
+    try {
+      const response = await fetch("/api/vitals");
+      const data = await response.json();
+      if (data.vitals) {
+        const mapped = data.vitals.map((v) => ({
+          id: v.id,
+          type: v.type,
+          value: v.value,
+          secondary: v.secondary || undefined,
+          date: new Date(v.recordedAt).toISOString().split("T")[0],
+          time: new Date(v.recordedAt).toTimeString().slice(0, 5),
+          notes: v.notes || "",
+        }));
+        if (mapped.length > 0) {
+          setEntries(mapped);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching vitals:", error);
+    }
+  };
+
   const getLatestEntry = (typeId) => {
     return entries.find((e) => e.type === typeId);
   };
 
-  const handleAddEntry = () => {
+  const handleAddEntry = async () => {
     if (!selectedType) return;
 
     const vital = vitalTypes.find((v) => v.id === selectedType);
-    const newEntry = {
-      id: Date.now(),
-      type: selectedType,
-      value: vital.isText ? 0 : parseFloat(formData.value),
-      secondary: formData.secondary ? parseFloat(formData.secondary) : undefined,
-      date: formData.date,
-      time: formData.time,
-      notes: vital.isText ? formData.textValue : formData.notes,
-    };
+    const value = vital.isText ? 0 : parseFloat(formData.value);
+    const secondary = formData.secondary ? parseFloat(formData.secondary) : undefined;
+    const notes = vital.isText ? formData.textValue : formData.notes;
 
-    setEntries([newEntry, ...entries]);
+    const statusObj = getStatus(selectedType, value, secondary);
+    const status = statusObj.label.toLowerCase();
+
+    try {
+      const response = await fetch("/api/vitals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: selectedType,
+          value,
+          secondary,
+          unit: vital.unit,
+          notes,
+          status,
+          date: formData.date,
+          time: formData.time,
+        }),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        const newEntry = {
+          id: result.vital.id,
+          type: result.vital.type,
+          value: result.vital.value,
+          secondary: result.vital.secondary || undefined,
+          date: new Date(result.vital.recordedAt).toISOString().split("T")[0],
+          time: new Date(result.vital.recordedAt).toTimeString().slice(0, 5),
+          notes: result.vital.notes || "",
+        };
+        setEntries([newEntry, ...entries]);
+      } else {
+        alert("Failed to save vital entry.");
+      }
+    } catch (error) {
+      console.error("Error adding vital:", error);
+      alert("Something went wrong. Please try again.");
+    }
+
     setShowModal(false);
     setSelectedType(null);
     setFormData({
@@ -232,8 +291,8 @@ export default function VitalsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Vitals</h1>
-          <p className="text-gray-500 mt-1">Track and monitor your health metrics</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Vitals</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Track and monitor your health metrics</p>
         </div>
         <button
           onClick={() => setShowModal(true)}
@@ -254,7 +313,7 @@ export default function VitalsPage() {
           return (
             <div
               key={vital.id}
-              className="p-5 bg-white rounded-2xl border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
+              className="p-5 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 hover:shadow-md dark:hover:shadow-gray-900/30 transition-shadow cursor-pointer"
             >
               <div className="flex items-center justify-between mb-3">
                 <div className={`w-10 h-10 rounded-xl ${vital.bg} flex items-center justify-center`}>
@@ -265,18 +324,18 @@ export default function VitalsPage() {
                 {trend === "stable" && <Minus className="w-4 h-4 text-gray-300" />}
               </div>
 
-              <p className="text-sm text-gray-500 mb-1">{vital.name}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{vital.name}</p>
 
               {latest ? (
                 <>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
                     {vital.hasSecondary ? `${latest.value}/${latest.secondary}` : latest.value}
-                    <span className="text-sm font-normal text-gray-400 ml-1">{vital.unit}</span>
+                    <span className="text-sm font-normal text-gray-400 dark:text-gray-500 ml-1">{vital.unit}</span>
                   </p>
                   <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full mt-2 ${status.bg} ${status.color}`}>{status.label}</span>
                 </>
               ) : (
-                <p className="text-sm text-gray-400 mt-2">No readings yet</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">No readings yet</p>
               )}
             </div>
           );
@@ -284,8 +343,8 @@ export default function VitalsPage() {
       </div>
 
       {/* Recent Entries */}
-      <div className="bg-white rounded-2xl border border-gray-200 p-6">
-        <h2 className="font-semibold text-gray-900 mb-4">Recent Entries</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+        <h2 className="font-semibold text-gray-900 dark:text-white mb-4">Recent Entries</h2>
 
         <div className="space-y-3">
           {entries.map((entry) => {
@@ -295,15 +354,15 @@ export default function VitalsPage() {
             return (
               <div
                 key={entry.id}
-                className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition"
+                className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition"
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-lg ${vital.bg} flex items-center justify-center`}>
                     <vital.icon className={`w-5 h-5 ${vital.color}`} />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{vital.name}</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{vital.name}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
                       {entry.date} at {entry.time}
                       {entry.notes ? ` • ${entry.notes}` : ""}
                     </p>
@@ -311,7 +370,7 @@ export default function VitalsPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <p className="text-sm font-semibold text-gray-900">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
                     {vital.hasSecondary ? `${entry.value}/${entry.secondary}` : entry.value} {vital.unit}
                   </p>
                   <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${status.bg} ${status.color}`}>{status.label}</span>
@@ -325,16 +384,16 @@ export default function VitalsPage() {
       {/* Add Vital Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md p-6">
             {/* Modal Header */}
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">{selectedType ? "Add Reading" : "Select Vital Type"}</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{selectedType ? "Add Reading" : "Select Vital Type"}</h3>
               <button
                 onClick={() => {
                   setShowModal(false);
                   setSelectedType(null);
                 }}
-                className="p-1 rounded-lg hover:bg-gray-100 transition"
+                className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
               >
                 <X className="w-5 h-5 text-gray-500" />
               </button>
@@ -347,12 +406,12 @@ export default function VitalsPage() {
                   <button
                     key={vital.id}
                     onClick={() => setSelectedType(vital.id)}
-                    className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition text-left"
+                    className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition text-left"
                   >
                     <div className={`w-9 h-9 rounded-lg ${vital.bg} flex items-center justify-center`}>
                       <vital.icon className={`w-4 h-4 ${vital.color}`} />
                     </div>
-                    <span className="text-sm font-medium text-gray-700">{vital.name}</span>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{vital.name}</span>
                   </button>
                 ))}
               </div>
@@ -374,17 +433,17 @@ export default function VitalsPage() {
                       </button>
 
                       {/* Selected type badge */}
-                      <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl">
+                      <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
                         <div className={`w-8 h-8 rounded-lg ${vital.bg} flex items-center justify-center`}>
                           <vital.icon className={`w-4 h-4 ${vital.color}`} />
                         </div>
-                        <span className="text-sm font-medium text-gray-700">{vital.name}</span>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{vital.name}</span>
                       </div>
 
                       {/* Value Input */}
                       {vital.isText ? (
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Details</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Details</label>
                           <textarea
                             value={formData.textValue}
                             onChange={(e) =>
@@ -394,13 +453,13 @@ export default function VitalsPage() {
                               })
                             }
                             placeholder="Enter medication or details..."
-                            className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none h-20"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none h-20 placeholder-gray-400"
                           />
                         </div>
                       ) : (
                         <div className="flex gap-3">
                           <div className="flex-1">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">{vital.hasSecondary ? "Systolic (top)" : "Value"}</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{vital.hasSecondary ? "Systolic (top)" : "Value"}</label>
                             <div className="relative">
                               <input
                                 type="number"
@@ -412,7 +471,7 @@ export default function VitalsPage() {
                                   })
                                 }
                                 placeholder="0"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                               />
                               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">{vital.unit}</span>
                             </div>
@@ -420,7 +479,7 @@ export default function VitalsPage() {
 
                           {vital.hasSecondary && (
                             <div className="flex-1">
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Diastolic (bottom)</label>
+                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Diastolic (bottom)</label>
                               <div className="relative">
                                 <input
                                   type="number"
@@ -432,7 +491,7 @@ export default function VitalsPage() {
                                     })
                                   }
                                   placeholder="0"
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">{vital.unit}</span>
                               </div>
@@ -444,7 +503,7 @@ export default function VitalsPage() {
                       {/* Date & Time */}
                       <div className="flex gap-3">
                         <div className="flex-1">
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
                           <input
                             type="date"
                             value={formData.date}
@@ -454,11 +513,11 @@ export default function VitalsPage() {
                                 date: e.target.value,
                               })
                             }
-                            className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
                         </div>
                         <div className="flex-1">
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Time</label>
                           <input
                             type="time"
                             value={formData.time}
@@ -468,7 +527,7 @@ export default function VitalsPage() {
                                 time: e.target.value,
                               })
                             }
-                            className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
                         </div>
                       </div>
@@ -476,7 +535,7 @@ export default function VitalsPage() {
                       {/* Notes */}
                       {!vital.isText && (
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Notes (optional)</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes (optional)</label>
                           <input
                             type="text"
                             value={formData.notes}
@@ -487,7 +546,7 @@ export default function VitalsPage() {
                               })
                             }
                             placeholder="e.g. After morning walk"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
                           />
                         </div>
                       )}
@@ -499,7 +558,7 @@ export default function VitalsPage() {
                             setShowModal(false);
                             setSelectedType(null);
                           }}
-                          className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition text-sm font-medium"
+                          className="flex-1 px-4 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition text-sm font-medium"
                         >
                           Cancel
                         </button>

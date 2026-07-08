@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FileText, Download, Share2, Eye, Plus, Search, ChevronDown, X, Calendar, User, Scan, Heart, TrendingUp, AlertTriangle, CheckCircle, Clock } from "lucide-react";
 
 const demoReports = [
@@ -156,10 +156,44 @@ function getVitalStatusIcon(status) {
 }
 
 export default function ReportsPage() {
-  const [reports] = useState(demoReports);
+  const [reports, setReports] = useState(demoReports);
   const [selectedReport, setSelectedReport] = useState(null);
   const [filterType, setFilterType] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    fetchReports();
+  }, []);
+
+  const fetchReports = async () => {
+    try {
+      const response = await fetch("/api/reports");
+      const data = await response.json();
+      if (data.reports && data.reports.length > 0) {
+        setReports(data.reports);
+      }
+    } catch (error) {
+      console.error("Error fetching reports:", error);
+    }
+  };
+
+  const handleDownloadReport = async (reportId) => {
+    try {
+      const response = await fetch(`/api/reports/${reportId}`);
+      if (response.status === 404) {
+        alert("Report download is only supported for AI diagnostic scan reports.");
+        return;
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `diagnosis-report-${reportId}.pdf`;
+      a.click();
+    } catch (error) {
+      console.error("Error downloading report:", error);
+    }
+  };
 
   const filteredReports = reports.filter((report) => {
     const matchesType = filterType === "all" || report.type === filterType;
@@ -172,8 +206,8 @@ export default function ReportsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Reports</h1>
-          <p className="text-gray-500 mt-1">View and download your medical reports</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Reports</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">View and download your medical reports</p>
         </div>
         <button className="flex items-center gap-2 px-4 py-2.5 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition font-medium text-sm">
           <Plus className="w-4 h-4" />
@@ -190,7 +224,7 @@ export default function ReportsPage() {
             placeholder="Search reports..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 dark:placeholder-gray-500"
           />
         </div>
 
@@ -199,7 +233,7 @@ export default function ReportsPage() {
             <button
               key={type}
               onClick={() => setFilterType(type)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${filterType === type ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${filterType === type ? "bg-blue-500 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"}`}
             >
               {type.charAt(0).toUpperCase() + type.slice(1)}
             </button>
@@ -217,7 +251,7 @@ export default function ReportsPage() {
           return (
             <div
               key={report.id}
-              className="bg-white rounded-2xl border border-gray-200 p-5 hover:shadow-md transition-shadow"
+              className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md dark:hover:shadow-gray-900/30 transition-shadow"
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-4">
@@ -226,7 +260,7 @@ export default function ReportsPage() {
                   </div>
 
                   <div>
-                    <h3 className="font-semibold text-gray-900">{report.title}</h3>
+                    <h3 className="font-semibold text-gray-900 dark:text-white">{report.title}</h3>
                     <div className="flex items-center gap-3 mt-1">
                       <span className="flex items-center gap-1 text-xs text-gray-500">
                         <User className="w-3 h-3" />
@@ -242,8 +276,8 @@ export default function ReportsPage() {
                       </span>
                     </div>
                     <div className="flex items-center gap-2 mt-2">
-                      <span className="text-sm font-medium text-gray-700">{report.result}</span>
-                      {report.confidence && <span className="text-xs text-gray-400">({report.confidence}% confidence)</span>}
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{report.result}</span>
+                      {report.confidence && <span className="text-xs text-gray-400 dark:text-gray-500">({report.confidence}% confidence)</span>}
                       <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${severity.bg} ${severity.color}`}>{severity.label}</span>
                     </div>
                   </div>
@@ -252,19 +286,20 @@ export default function ReportsPage() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setSelectedReport(report)}
-                    className="p-2 rounded-lg hover:bg-gray-100 transition"
+                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
                     title="View Report"
                   >
                     <Eye className="w-4 h-4 text-gray-500" />
                   </button>
                   <button
-                    className="p-2 rounded-lg hover:bg-gray-100 transition"
+                    onClick={() => handleDownloadReport(report.id)}
+                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
                     title="Download PDF"
                   >
                     <Download className="w-4 h-4 text-gray-500" />
                   </button>
                   <button
-                    className="p-2 rounded-lg hover:bg-gray-100 transition"
+                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
                     title="Share"
                   >
                     <Share2 className="w-4 h-4 text-gray-500" />
@@ -286,12 +321,12 @@ export default function ReportsPage() {
       {/* Report Detail Modal */}
       {selectedReport && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl w-full max-w-2xl my-8">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-2xl my-8">
             {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-100">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">{selectedReport.title}</h3>
-                <p className="text-sm text-gray-500 mt-0.5">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{selectedReport.title}</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
                   {selectedReport.id} • {selectedReport.date}
                 </p>
               </div>
@@ -302,53 +337,53 @@ export default function ReportsPage() {
                 </button>
                 <button
                   onClick={() => setSelectedReport(null)}
-                  className="p-1.5 rounded-lg hover:bg-gray-100 transition"
+                  className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
                 >
-                  <X className="w-5 h-5 text-gray-500" />
+                  <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                 </button>
               </div>
             </div>
 
             <div className="p-6 space-y-6">
               {/* Patient Info */}
-              <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
+              <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
                 <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">{selectedReport.patient.charAt(0)}</div>
                 <div>
-                  <p className="font-medium text-gray-900">{selectedReport.patient}</p>
-                  <p className="text-xs text-gray-500">Report generated on {selectedReport.date}</p>
+                  <p className="font-medium text-gray-900 dark:text-white">{selectedReport.patient}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Report generated on {selectedReport.date}</p>
                 </div>
               </div>
 
               {/* Scan Results */}
               {selectedReport.type === "scan" && (
-                <div className="p-4 border border-gray-200 rounded-xl">
-                  <h4 className="font-semibold text-gray-900 mb-3">Scan Results</h4>
+                <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-xl">
+                  <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Scan Results</h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-xs text-gray-500">Prediction</p>
-                      <p className="font-medium text-gray-900">{selectedReport.result}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Prediction</p>
+                      <p className="font-medium text-gray-900 dark:text-white">{selectedReport.result}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500">Confidence</p>
-                      <p className="font-medium text-gray-900">{selectedReport.confidence}%</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Confidence</p>
+                      <p className="font-medium text-gray-900 dark:text-white">{selectedReport.confidence}%</p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500">Severity</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Severity</p>
                       <p className={`font-medium ${getSeverityBadge(selectedReport.severity).color}`}>{getSeverityBadge(selectedReport.severity).label}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500">Type</p>
-                      <p className="font-medium text-gray-900 capitalize">{selectedReport.type}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Type</p>
+                      <p className="font-medium text-gray-900 dark:text-white capitalize">{selectedReport.type}</p>
                     </div>
                   </div>
 
                   {/* Confidence Bar */}
                   <div className="mt-4">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-gray-500">Confidence Level</span>
-                      <span className="text-xs font-medium text-gray-700">{selectedReport.confidence}%</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Confidence Level</span>
+                      <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{selectedReport.confidence}%</span>
                     </div>
-                    <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="w-full h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-blue-500 rounded-full transition-all"
                         style={{ width: `${selectedReport.confidence}%` }}
@@ -360,19 +395,19 @@ export default function ReportsPage() {
 
               {/* Vitals */}
               {selectedReport.vitals && (
-                <div className="p-4 border border-gray-200 rounded-xl">
-                  <h4 className="font-semibold text-gray-900 mb-3">Vitals Summary</h4>
+                <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-xl">
+                  <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Vitals Summary</h4>
                   <div className="grid grid-cols-2 gap-3">
                     {Object.entries(selectedReport.vitals).map(([key, vital]) => {
                       const StatusIcon = getVitalStatusIcon(vital.status);
                       return (
                         <div
                           key={key}
-                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                          className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/40 rounded-lg"
                         >
                           <div>
-                            <p className="text-xs text-gray-500 capitalize">{key.replace(/([A-Z])/g, " $1").trim()}</p>
-                            <p className="font-medium text-gray-900">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{key.replace(/([A-Z])/g, " $1").trim()}</p>
+                            <p className="font-medium text-gray-900 dark:text-white">
                               {vital.value} {vital.unit}
                             </p>
                           </div>
@@ -385,8 +420,8 @@ export default function ReportsPage() {
               )}
 
               {/* Recommendations */}
-              <div className="p-4 border border-gray-200 rounded-xl">
-                <h4 className="font-semibold text-gray-900 mb-3">Recommendations</h4>
+              <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-xl">
+                <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Recommendations</h4>
                 <ul className="space-y-2">
                   {selectedReport.recommendations.map((rec, i) => (
                     <li
@@ -394,16 +429,16 @@ export default function ReportsPage() {
                       className="flex items-start gap-2"
                     >
                       <CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-sm text-gray-700">{rec}</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">{rec}</span>
                     </li>
                   ))}
                 </ul>
               </div>
 
               {/* Disclaimer */}
-              <div className="p-3 bg-yellow-50 rounded-xl flex items-start gap-2">
+              <div className="p-3 bg-yellow-50 dark:bg-yellow-500/10 rounded-xl flex items-start gap-2">
                 <AlertTriangle className="w-4 h-4 text-yellow-500 mt-0.5 flex-shrink-0" />
-                <p className="text-xs text-yellow-700">This is an AI-generated report for educational purposes only. Always consult a qualified healthcare professional for medical advice and diagnosis.</p>
+                <p className="text-xs text-yellow-700 dark:text-yellow-300">This is an AI-generated report for educational purposes only. Always consult a qualified healthcare professional for medical advice and diagnosis.</p>
               </div>
             </div>
           </div>
