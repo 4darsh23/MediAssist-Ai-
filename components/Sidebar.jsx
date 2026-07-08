@@ -71,12 +71,12 @@ export default function Sidebar() {
       >
         {/* Logo */}
         <div className="flex items-center justify-between px-4 py-5 border-b border-gray-100 dark:border-gray-700">
-          <div className="flex items-center gap-3">
+          <Link href="/" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <div className="w-9 h-9 rounded-xl bg-blue-500 dark:bg-blue-600 flex items-center justify-center flex-shrink-0">
               <Activity className="w-5 h-5 text-white" />
             </div>
             {!collapsed && <span className="text-lg font-bold text-gray-900 dark:text-white">MedAssist AI</span>}
-          </div>
+          </Link>
           <button
             onClick={() => {
               setCollapsed(!collapsed);

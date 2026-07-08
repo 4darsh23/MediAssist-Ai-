@@ -3,6 +3,7 @@
 import { Activity, Brain, Shield, Upload, ArrowRight, Heart, Eye, Scan } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { InfiniteGridBackground } from "@/components/ui/the-infinite-grid";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -33,7 +34,8 @@ function AnimatedCounter({ value, suffix = "" }) {
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 overflow-hidden">
-      {/* Navbar */}
+      <InfiniteGridBackground>
+        {/* Navbar */}
       <motion.nav
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -68,14 +70,6 @@ export default function Home() {
             animate="visible"
             variants={stagger}
           >
-            <motion.span
-              variants={fadeUp}
-              custom={0}
-              className="inline-block px-4 py-1.5 bg-blue-100 text-blue-700 text-sm font-medium rounded-full"
-            >
-              🧠 AI & Deep Learning
-            </motion.span>
-
             <motion.h1
               variants={fadeUp}
               custom={1}
@@ -365,6 +359,7 @@ export default function Home() {
           </div>
         </div>
       </footer>
+      </InfiniteGridBackground>
     </div>
   );
 }
