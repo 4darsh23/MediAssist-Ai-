@@ -1,5 +1,6 @@
 import { Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import LayoutShell from "@/components/LayoutShell";
 import "./globals.css";
@@ -21,6 +22,7 @@ export default function RootLayout({ children }) {
         <body className={inter.className}>
           <ThemeProvider>
             <LayoutShell>{children}</LayoutShell>
+            <SpeedInsights />
           </ThemeProvider>
         </body>
       </html>
