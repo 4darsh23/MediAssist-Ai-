@@ -11,8 +11,6 @@
   "dependencies": {
     "@clerk/nextjs": "^6.37.4",
     "@prisma/client": "^6.19.3",
-    "@tensorflow-models/mobilenet": "^2.1.1",
-    "@tensorflow/tfjs": "^4.22.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.34.0",
@@ -28,7 +26,8 @@
     "recharts": "^3.7.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.1",
-    "tailwindcss": "^4.1.18"
+    "tailwindcss": "^4.1.18",
+    "vercel": "^55.0.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",
